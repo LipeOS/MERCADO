@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciar Fiado - Mercadinho{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/fiado.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Gerenciar Fiado</h2>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Registrar Nova Venda Fiada</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" id="form-fiado">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="cliente_id">Cliente *</label>
+                            <select class="form-control" id="cliente_id" name="cliente_id" required>
+                                <option value="">Selecione um cliente</option>
+                                {% for cliente in clientes %}
+                                <option value="{{ cliente.id }}">{{ cliente.nome_completo }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="produto_id">Produto *</label>
+                            <select class="form-control" id="produto_id" name="produto_id" required>
+                                <option value="">Selecione um produto</option>
+                                {% for produto in produtos %}
+                                <option value="{{ produto.id }}" data-preco="{{ produto.preco }}">
+                                    {{ produto.nome }} - R$ {{ "%.2f"|format(produto.preco) }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="quantidade">Quantidade *</label>
+                            <input type="number" class="form-control" id="quantidade" name="quantidade" min="1" value="1" required>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="valor_total">Valor Total</label>
+                            <input type="text" class="form-control" id="valor_total" readonly value="R$ 0,00">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="observacoes">Observações</label>
+                    <textarea class="form-control" id="observacoes" name="observacoes" rows="2"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> Registrar Fiado
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5>Fiados Pendentes</h5>
+        </div>
+        <div class="card-body">
+            {% if fiados_pendentes %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Cliente</th>
+                            <th>Produto</th>
+                            <th>Quantidade</th>
+                            <th>Valor Unitário</th>
+                            <th>Valor Total</th>
+                            <th>Observações</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fiado in fiados_pendentes %}
+                        <tr>
+                            <td>{{ fiado.data_compra }}</td>
+                            <td>{{ fiado.cliente }}</td>
+                            <td>{{ fiado.produto }}</td>
+                            <td>{{ fiado.quantidade }}</td>
+                            <td>R$ {{ "%.2f"|format(fiado.valor_unitario) }}</td>
+                            <td>R$ {{ "%.2f"|format(fiado.valor_total) }}</td>
+                            <td>{{ fiado.observacoes or '-' }}</td>
+                            <td>
+                                <a href="{{ url_for('quitar_fiado', id=fiado.id) }}" 
+                                   class="btn btn-sm btn-success"
+                                   onclick="return confirm('Confirmar quitação deste fiado?')">
+                                    <i class="bi bi-cash"></i> Quitar
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">Nenhum fiado pendente encontrado.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

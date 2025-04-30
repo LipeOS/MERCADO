@@ -1,0 +1,22 @@
+# Dependências principais
+Flask==2.3.2
+flask-mysql-connector==1.1.0  # Versão mais recente disponível
+Jinja2==3.1.2
+MarkupSafe==2.1.3
+Werkzeug==2.3.7
+
+# Segurança e autenticação
+passlib==1.7.4
+Flask-Login==0.6.2
+
+# Formulários
+WTForms==3.0.1
+Flask-WTF==1.1.1
+
+# Utilitários
+python-dotenv==1.0.0
+click==8.1.3
+
+# Dependências para produção (opcionais)
+gunicorn==20.1.0  # Para deploy em produção
+pymysql==1.0.3    # Driver MySQL alternativo

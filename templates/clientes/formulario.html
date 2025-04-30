@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Editar' if cliente else 'Novo' }} Cliente - Mercadinho{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h4>{{ 'Editar' if cliente else 'Cadastrar' }} Cliente</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST" id="form-cliente">
+                <div class="form-group">
+                    <label for="nome_completo">Nome Completo *</label>
+                    <input type="text" class="form-control" id="nome_completo" name="nome_completo" 
+                           value="{{ cliente.nome_completo if cliente }}" required>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="telefone">Telefone *</label>
+                            <input type="text" class="form-control" id="telefone" name="telefone" 
+                                   value="{{ cliente.telefone if cliente }}" 
+                                   pattern="\(?\d{2}\)?[\s-]?\d{4,5}[\s-]?\d{4}" 
+                                   title="Digite um telefone válido (ex: (99) 99999-9999)" required>
+                            <small class="form-text text-muted">Formato: (99) 99999-9999</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="cpf">CPF</label>
+                            <input type="text" class="form-control" id="cpf" name="cpf" 
+                                   value="{{ cliente.cpf if cliente }}"
+                                   pattern="\d{3}\.\d{3}\.\d{3}-\d{2}" 
+                                   title="Digite um CPF válido (ex: 999.999.999-99)">
+                            <small class="form-text text-muted">Formato: 999.999.999-99</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        {{ 'Atualizar' if cliente else 'Cadastrar' }}
+                    </button>
+                    <a href="{{ url_for('listar_clientes') }}" class="btn btn-secondary">Cancelar</a>
+                    
+                    {% if cliente %}
+                    <button type="button" onclick="confirmarExclusao({{ cliente.id }})" 
+                            class="btn btn-danger float-right">
+                        <i class="bi bi-trash"></i> Excluir
+                    </button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

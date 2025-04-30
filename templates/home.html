@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Página Inicial{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+    
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-boxes"></i>
+            </div>
+            <div class="stat-info">
+                <h3>Total de Produtos</h3>
+                <p>{{ total_produtos }}</p>
+            </div>
+        </div>
+        
+        <div class="stat-card warning">
+            <div class="stat-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-info">
+                <h3>Estoque Baixo</h3>
+                <p>{{ estoque_baixo }}</p>
+            </div>
+        </div>
+        
+        <div class="stat-card danger">
+            <div class="stat-icon">
+                <i class="fas fa-file-invoice"></i>
+            </div>
+            <div class="stat-info">
+                <h3>Fiados Pendentes</h3>
+                <p>{{ fiados_pendentes }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="quick-actions">
+        <a href="{{ url_for('produtos') }}" class="action-btn">
+            <i class="fas fa-plus"></i> Novo Produto
+        </a>
+        <a href="{{ url_for('listar_clientes') }}" class="action-btn">
+            <i class="fas fa-user-plus"></i> Novo Cliente
+        </a>
+        <a href="{{ url_for('gerenciar_fiado') }}" class="action-btn">
+            <i class="fas fa-file-invoice-dollar"></i> Novo Fiado
+        </a>
+    </div>
+</div>
+
+{% endblock %}

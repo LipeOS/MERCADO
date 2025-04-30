@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Clientes - Mercadinho{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Clientes Cadastrados</h2>
+        <a href="{{ url_for('gerenciar_cliente') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Novo Cliente
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <form method="GET" class="form-inline">
+                <input type="text" name="busca" class="form-control" placeholder="Pesquisar cliente..." value="{{ busca }}">
+                <button type="submit" class="btn btn-primary ml-2">
+                    <i class="bi bi-search"></i> Buscar
+                </button>
+            </form>
+        </div>
+        
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Telefone</th>
+                        <th>CPF</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cliente in clientes %}
+                    <tr>
+                        <td>{{ cliente.nome_completo }}</td>
+                        <td>{{ cliente.telefone or 'Não informado' }}</td>
+                        <td>{{ cliente.cpf or 'Não informado' }}</td>
+                        <td>
+                            <a href="{{ url_for('gerenciar_cliente', id=cliente.id) }}" class="btn btn-sm btn-warning">
+                                <i class="bi bi-pencil"></i> Editar
+                            </a>
+                            <button onclick="confirmarExclusao({{ cliente.id }})" class="btn btn-sm btn-danger">
+                                <i class="bi bi-trash"></i> Excluir
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center">Nenhum cliente cadastrado</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmarExclusao(id) {
+    if (confirm('Tem certeza que deseja excluir este cliente?')) {
+        window.location.href = "{{ url_for('excluir_cliente', id=0) }}".replace('0', id);
+    }
+}
+</script>
+{% endblock %}

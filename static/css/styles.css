@@ -1,0 +1,371 @@
+/* ====== VARIÁVEIS DE CORES ====== */
+:root {
+    --primary-color: #1a73e8; /* Azul mais vibrante */
+    --primary-dark: #0d5bb7;
+    --primary-light: #e8f0fe;
+    --secondary-color: #f8f9fa;
+    --text-color: #202124;
+    --text-light: #5f6368;
+    --border-color: #dadce0;
+    --success-color: #34a853;
+    --danger-color: #ea4335;
+    --warning-color: #fbbc05;
+  }
+  
+  /* ====== RESET E ESTILOS GERAIS ====== */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  html {
+    font-size: 16px;
+    height: 100%;
+  }
+  
+  body {
+    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.5;
+    color: var(--text-color);
+    background-color: #f5f5f5;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* ====== LAYOUT ====== */
+  .container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+  }
+  
+  .main-content {
+    flex: 1;
+    padding: 20px 0;
+  }
+  
+  /* ====== NAVBAR ====== */
+  .navbar {
+    background-color: var(--primary-color);
+    padding: 0.75rem 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .navbar-brand {
+    color: white;
+    font-weight: 600;
+    font-size: 1.25rem;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+  }
+  
+  .navbar-brand i {
+    margin-right: 8px;
+  }
+  
+  .navbar-nav {
+    display: flex;
+    list-style: none;
+    margin-left: auto;
+  }
+  
+  .nav-item {
+    margin-left: 1rem;
+  }
+  
+  .nav-link {
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+  }
+  
+  .nav-link i {
+    margin-right: 6px;
+  }
+  
+  .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  /* ====== CARDS ====== */
+  .card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+  }
+  
+  .card-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    background-color: var(--primary-light);
+    color: var(--primary-dark);
+  }
+  
+  .card-body {
+    padding: 16px;
+  }
+  
+  /* ====== TABELAS ====== */
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+  }
+  
+  .table th, .table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .table th {
+    background-color: var(--primary-light);
+    color: var(--primary-dark);
+    font-weight: 600;
+  }
+  
+  .table tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+  
+  /* ====== FORMULÁRIOS ====== */
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+  
+  .form-control {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+  }
+  
+  .form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+  }
+  
+  /* ====== BOTÕES ====== */
+  .btn {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: 500;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+  }
+  
+  .btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    background-color: var(--primary-dark);
+  }
+  
+  .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  /* ====== UTILITÁRIOS ====== */
+  .text-center {
+    text-align: center;
+  }
+  
+  .mt-3 {
+    margin-top: 1rem;
+  }
+  
+  .mb-3 {
+    margin-bottom: 1rem;
+  }
+  
+  .d-flex {
+    display: flex;
+  }
+  
+  .align-items-center {
+    align-items: center;
+  }
+  
+  /* ====== RESPONSIVIDADE ====== */
+  @media (max-width: 768px) {
+    .navbar-nav {
+      flex-direction: column;
+      margin-top: 10px;
+    }
+    
+    .nav-item {
+      margin-left: 0;
+      margin-bottom: 5px;
+    }
+    
+    .table {
+      display: block;
+      overflow-x: auto;
+    }
+  }
+
+  .dashboard {
+    padding: 20px;
+}
+
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin: 30px 0;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    border-left: 4px solid #1a73e8;
+}
+
+.stat-card.warning {
+    border-left-color: #ff9800;
+}
+
+.stat-card.danger {
+    border-left-color: #f44336;
+}
+
+.stat-icon {
+    font-size: 2rem;
+    margin-right: 15px;
+    color: #1a73e8;
+}
+
+.warning .stat-icon {
+    color: #ff9800;
+}
+
+.danger .stat-icon {
+    color: #f44336;
+}
+
+.stat-info h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: #555;
+}
+
+.stat-info p {
+    margin: 5px 0 0;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.quick-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #1a73e8;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background 0.3s;
+}
+
+.action-btn:hover {
+    background: #0d5bb7;
+}
+
+
+/* Estilos para a página de produtos */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+}
+
+.search-form {
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  min-width: 250px;
+}
+
+.search-btn {
+  margin-left: 0.5rem;
+}
+
+.actions {
+  white-space: nowrap;
+}
+
+.btn-group {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.table th {
+  white-space: nowrap;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+/* Badges para estoque */
+.badge {
+  font-size: 0.85em;
+  padding: 0.35em 0.65em;
+  font-weight: 500;
+}
+
+/* Modal de confirmação */
+.modal-header {
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+}
