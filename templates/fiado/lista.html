@@ -28,10 +28,13 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-5">
                         <div class="form-group">
-                            <label for="produto_id">Produto *</label>
-                            <select class="form-control" id="produto_id" name="produto_id" required>
+                            <label for="produto_id">Produto</label>
+                            <select class="form-control" id="produto_id" name="produto_id">
                                 <option value="">Selecione um produto</option>
                                 {% for produto in produtos %}
                                 <option value="{{ produto.id }}" data-preco="{{ produto.preco }}">
@@ -43,28 +46,70 @@
                     </div>
                     <div class="col-md-2">
                         <div class="form-group">
-                            <label for="quantidade">Quantidade *</label>
-                            <input type="number" class="form-control" id="quantidade" name="quantidade" min="1" value="1" required>
+                            <label for="quantidade">Quantidade</label>
+                            <input type="number" class="form-control" id="quantidade" name="quantidade" min="1" value="1">
                         </div>
                     </div>
                     <div class="col-md-2">
                         <div class="form-group">
-                            <label for="valor_total">Valor Total</label>
-                            <input type="text" class="form-control" id="valor_total" readonly value="R$ 0,00">
+                            <label for="valor_item">Valor</label>
+                            <input type="text" class="form-control" id="valor_item" readonly value="R$ 0,00">
                         </div>
                     </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="button" id="btn-adicionar" class="btn btn-secondary">
+                            <i class="bi bi-plus-circle"></i> Adicionar Item
+                        </button>
+                    </div>
                 </div>
+                
+                <!-- Lista de itens adicionados -->
+                <div class="mb-3">
+                    <h5>Itens do Fiado</h5>
+                    <div id="itens-fiado-container" class="table-responsive">
+                        <table class="table table-sm" id="tabela-itens">
+                            <thead>
+                                <tr>
+                                    <th>Produto</th>
+                                    <th>Quantidade</th>
+                                    <th>Valor Unitário</th>
+                                    <th>Total</th>
+                                    <th>Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itens-fiado">
+                                <!-- Itens serão adicionados aqui via JavaScript -->
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="3">Total Geral</th>
+                                    <th id="total-geral">R$ 0,00</th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div id="sem-itens" class="alert alert-info">
+                        Nenhum item adicionado ainda.
+                    </div>
+                </div>
+                
                 <div class="form-group">
                     <label for="observacoes">Observações</label>
                     <textarea class="form-control" id="observacoes" name="observacoes" rows="2"></textarea>
                 </div>
-                <button type="submit" class="btn btn-primary">
+                
+                <!-- Campos hidden para enviar os itens -->
+                <input type="hidden" id="itens_json" name="itens_json" value="">
+                
+                <button type="submit" class="btn btn-primary" id="btn-registrar" disabled>
                     <i class="bi bi-check-circle"></i> Registrar Fiado
                 </button>
             </form>
         </div>
     </div>
 
+    <!-- Fiados Pendentes - Atualizado para nova estrutura -->
     <div class="card">
         <div class="card-header">
             <h5>Fiados Pendentes</h5>
@@ -75,11 +120,8 @@
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th>Data</th>
                             <th>Cliente</th>
-                            <th>Produto</th>
-                            <th>Quantidade</th>
-                            <th>Valor Unitário</th>
+                            <th>Produtos</th>
                             <th>Valor Total</th>
                             <th>Observações</th>
                             <th>Ações</th>
@@ -88,11 +130,12 @@
                     <tbody>
                         {% for fiado in fiados_pendentes %}
                         <tr>
-                            <td>{{ fiado.data_compra }}</td>
                             <td>{{ fiado.cliente }}</td>
-                            <td>{{ fiado.produto }}</td>
-                            <td>{{ fiado.quantidade }}</td>
-                            <td>R$ {{ "%.2f"|format(fiado.valor_unitario) }}</td>
+                            <td>
+                                {% for item in fiado.itens %}
+                                    {{ item.quantidade }}x {{ item.produto }} (R$ {{ "%.2f"|format(item.valor_unitario) }})<br>
+                                {% endfor %}
+                            </td>
                             <td>R$ {{ "%.2f"|format(fiado.valor_total) }}</td>
                             <td>{{ fiado.observacoes or '-' }}</td>
                             <td>

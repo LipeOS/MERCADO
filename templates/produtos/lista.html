@@ -64,6 +64,7 @@
                                 </a>
                                 <button class="btn btn-sm btn-danger delete-btn" 
                                         data-id="{{ produto.id }}"
+                                        data-nome="{{ produto.nome }}"
                                         title="Excluir">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
@@ -81,44 +82,20 @@
     </div>
 </div>
 
-<!-- Modal de Confirmação -->
-<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirmar Exclusão</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>Tem certeza que deseja excluir este produto?</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger" id="confirmDelete">Excluir</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Modal de confirmação para exclusão
     const deleteButtons = document.querySelectorAll('.delete-btn');
-    const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
-    let produtoIdToDelete = null;
     
     deleteButtons.forEach(button => {
         button.addEventListener('click', function() {
-            produtoIdToDelete = this.getAttribute('data-id');
-            confirmModal.show();
+            const produtoId = this.getAttribute('data-id');
+            const produtoNome = this.getAttribute('data-nome');
+            
+            if (confirm(`Tem certeza que deseja excluir o produto "${produtoNome}"?`)) {
+                window.location.href = `/produtos/excluir/${produtoId}`;
+            }
         });
-    });
-    
-    document.getElementById('confirmDelete').addEventListener('click', function() {
-        if (produtoIdToDelete) {
-            window.location.href = `/produtos/excluir/${produtoIdToDelete}`;
-        }
     });
 });
 </script>

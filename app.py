@@ -1,7 +1,12 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
-from flask_mysql_connector import MySQL
+from decimal import Decimal
+import json
 from datetime import datetime
+
+from flask import Flask, flash, redirect, render_template, request, url_for, session
+from flask_mysql_connector import MySQL
+from werkzeug.security import check_password_hash, generate_password_hash
 import functools
+
 
 app = Flask(__name__, static_url_path='/static')
 app.secret_key = 'sua_chave_secreta_aqui'
@@ -316,105 +321,168 @@ def excluir_cliente(id):
 @app.route('/fiado', methods=['GET', 'POST'])
 @login_required
 def gerenciar_fiado():
-    if request.method == 'POST':
-        try:
-            cliente_id = int(request.form['cliente_id'])
-            produto_id = int(request.form['produto_id'])
-            quantidade = int(request.form['quantidade'])
-            observacoes = request.form.get('observacoes', '')
-
-            if quantidade <= 0:
-                flash('Quantidade deve ser maior que zero', 'danger')
+    cursor = None
+    try:
+        if request.method == 'POST':
+            # Verificação dos campos obrigatórios
+            required_fields = ['cliente_id', 'itens_json']
+            if not all(field in request.form for field in required_fields):
+                flash('Dados incompletos no formulário', 'danger')
                 return redirect(url_for('gerenciar_fiado'))
 
-            cursor = mysql.connection.cursor(dictionary=True)
-            
-            cursor.execute('SELECT id, limite_fiado FROM clientes WHERE id = %s AND ativo = TRUE', (cliente_id,))
-            cliente = cursor.fetchone()
-            if not cliente:
-                flash('Cliente não encontrado ou inativo', 'danger')
+            try:
+                # Processamento dos dados do formulário
+                cliente_id = int(request.form['cliente_id'])
+                itens_json = request.form['itens_json']
+                observacoes = request.form.get('observacoes', '')
+                
+                # Parse e validação dos itens
+                try:
+                    itens = json.loads(itens_json)
+                    # Conversão para Decimal
+                    for item in itens:
+                        item['produto_id'] = int(item['produto_id'])
+                        item['quantidade'] = int(item['quantidade'])
+                        item['preco_unitario'] = Decimal(str(item['preco_unitario']))
+                        item['total'] = Decimal(str(item['total']))
+                except (json.JSONDecodeError, KeyError, ValueError) as e:
+                    flash('Formato inválido dos itens do fiado', 'danger')
+                    return redirect(url_for('gerenciar_fiado'))
+                
+                if not itens:
+                    flash('Adicione pelo menos um produto ao fiado', 'danger')
+                    return redirect(url_for('gerenciar_fiado'))
+                
+                cursor = mysql.connection.cursor(dictionary=True)
+                
+                # Validação do cliente
+                cursor.execute('SELECT id, limite_fiado FROM clientes WHERE id = %s AND ativo = TRUE', (cliente_id,))
+                cliente = cursor.fetchone()
+                if not cliente:
+                    flash('Cliente não encontrado ou inativo', 'danger')
+                    return redirect(url_for('gerenciar_fiado'))
+                
+                # Cálculo do fiado existente
+                cursor.execute('''
+                    SELECT COALESCE(SUM(valor_total), 0) as total_fiado 
+                    FROM fiado 
+                    WHERE cliente_id = %s AND status = "pendente"
+                ''', (cliente_id,))
+                total_fiado = Decimal(str(cursor.fetchone()['total_fiado']))
+                limite_cliente = Decimal(str(cliente['limite_fiado']))
+                valor_total_novo = sum(item['total'] for item in itens)
+                
+                # Validação de limite
+                if (total_fiado + valor_total_novo) > limite_cliente:
+                    flash(f'Limite de fiado excedido (Limite: R$ {limite_cliente:.2f})', 'danger')
+                    return redirect(url_for('gerenciar_fiado'))
+                
+                # Validação de estoque
+                for item in itens:
+                    cursor.execute('''
+                        SELECT id, nome, preco, quantidade 
+                        FROM produtos 
+                        WHERE id = %s AND ativo = TRUE
+                        FOR UPDATE
+                    ''', (item['produto_id'],))
+                    produto = cursor.fetchone()
+                    
+                    if not produto:
+                        flash(f'Produto ID {item["produto_id"]} não encontrado ou inativo', 'danger')
+                        return redirect(url_for('gerenciar_fiado'))
+                    
+                    if int(produto['quantidade']) < item['quantidade']:
+                        flash(f'Estoque insuficiente para {produto["nome"]} (Disponível: {produto["quantidade"]})', 'danger')
+                        return redirect(url_for('gerenciar_fiado'))
+                
+                # Inserção do fiado
+                cursor.execute('''
+                    INSERT INTO fiado 
+                    (cliente_id, data_compra, observacoes, valor_total, status)
+                    VALUES (%s, %s, %s, %s, 'pendente')
+                ''', (cliente_id, datetime.now().date(), observacoes, valor_total_novo))
+                fiado_id = cursor.lastrowid
+                
+                # Inserção dos itens e atualização de estoque
+                for item in itens:
+                    cursor.execute('''
+                        INSERT INTO fiado_itens
+                        (fiado_id, produto_id, quantidade, valor_unitario, valor_total)
+                        VALUES (%s, %s, %s, %s, %s)
+                    ''', (fiado_id, item['produto_id'], item['quantidade'], item['preco_unitario'], item['total']))
+                    
+                    cursor.execute('''
+                        UPDATE produtos 
+                        SET quantidade = quantidade - %s 
+                        WHERE id = %s
+                    ''', (item['quantidade'], item['produto_id']))
+                
+                mysql.connection.commit()
+                flash('Fiado registrado com sucesso!', 'success')
                 return redirect(url_for('gerenciar_fiado'))
 
-            cursor.execute('SELECT id, nome, preco, quantidade FROM produtos WHERE id = %s AND ativo = TRUE', (produto_id,))
-            produto = cursor.fetchone()
-            if not produto:
-                flash('Produto não encontrado ou inativo', 'danger')
+            except ValueError as e:
+                flash(f'Dados inválidos fornecidos: {str(e)}', 'danger')
+                return redirect(url_for('gerenciar_fiado'))
+            except Exception as e:
+                mysql.connection.rollback()
+                flash(f'Erro durante o processamento: {str(e)}', 'danger')
                 return redirect(url_for('gerenciar_fiado'))
 
-            if produto['quantidade'] < quantidade:
-                flash('Quantidade em estoque insuficiente', 'danger')
-                return redirect(url_for('gerenciar_fiado'))
-
-            valor_total = produto['preco'] * quantidade
-
+        # GET Request - Exibição da página
+        cursor = mysql.connection.cursor(dictionary=True)
+        
+        # Consulta fiados pendentes
+        cursor.execute('''
+            SELECT f.id, c.nome_completo as cliente, 
+                   DATE_FORMAT(f.data_compra, '%%d/%%m/%%Y') as data_compra,
+                   f.observacoes, f.valor_total
+            FROM fiado f
+            JOIN clientes c ON f.cliente_id = c.id
+            WHERE f.status = 'pendente'
+            ORDER BY f.data_compra DESC
+        ''')
+        fiados_pendentes = cursor.fetchall()
+        
+        # Consulta itens para cada fiado
+        for fiado in fiados_pendentes:
             cursor.execute('''
-                SELECT COALESCE(SUM(valor_total), 0) as total_fiado 
-                FROM fiado 
-                WHERE cliente_id = %s AND status = "pendente"
-            ''', (cliente_id,))
-            total_fiado = cursor.fetchone()['total_fiado']
+                SELECT fi.id, p.nome as produto, fi.quantidade,
+                       fi.valor_unitario, fi.valor_total
+                FROM fiado_itens fi
+                JOIN produtos p ON fi.produto_id = p.id
+                WHERE fi.fiado_id = %s
+            ''', (fiado['id'],))
+            fiado['itens'] = cursor.fetchall()
+        
+        # Consulta clientes e produtos ativos
+        cursor.execute('SELECT id, nome_completo FROM clientes WHERE ativo = TRUE ORDER BY nome_completo')
+        clientes = cursor.fetchall()
+        
+        cursor.execute('SELECT id, nome, preco FROM produtos WHERE ativo = TRUE AND quantidade > 0 ORDER BY nome')
+        produtos = cursor.fetchall()
+        
+        return render_template('fiado/lista.html',
+                            fiados_pendentes=fiados_pendentes,
+                            clientes=clientes,
+                            produtos=produtos,
+                            now=datetime.now())
 
-            if (total_fiado + valor_total) > cliente['limite_fiado']:
-                flash(f'Limite de fiado excedido (Limite: R$ {cliente["limite_fiado"]:.2f})', 'danger')
-                return redirect(url_for('gerenciar_fiado'))
-
-            cursor.execute('''
-                INSERT INTO fiado 
-                (cliente_id, produto_id, quantidade, valor_unitario, valor_total, data_compra, observacoes)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            ''', (cliente_id, produto_id, quantidade, produto['preco'], valor_total, datetime.now().date(), observacoes))
-
-            cursor.execute('''
-                UPDATE produtos 
-                SET quantidade = quantidade - %s 
-                WHERE id = %s
-            ''', (quantidade, produto_id))
-
-            mysql.connection.commit()
-            return redirect(url_for('gerenciar_fiado'))
-
-        except ValueError:
-            flash('Dados inválidos fornecidos', 'danger')
-        except Exception as e:
-            flash(f'Erro ao registrar venda fiada: {str(e)}', 'danger')
-        finally:
+    except Exception as e:
+        if 'cursor' in locals() and cursor:
+            mysql.connection.rollback()
+        flash(f'Erro no sistema: {str(e)}', 'danger')
+        return redirect(url_for('gerenciar_fiado'))
+    finally:
+        if cursor:
             cursor.close()
-
-    cursor = mysql.connection.cursor(dictionary=True)
-    
-    cursor.execute('''
-        SELECT f.id, c.nome_completo as cliente, p.nome as produto, 
-               f.quantidade, f.valor_unitario, f.valor_total, 
-               DATE_FORMAT(f.data_compra, '%%d/%%m/%%Y') as data_compra, 
-               f.observacoes
-        FROM fiado f
-        JOIN clientes c ON f.cliente_id = c.id
-        JOIN produtos p ON f.produto_id = p.id
-        WHERE f.status = 'pendente'
-        ORDER BY f.data_compra DESC
-    ''')
-    fiados_pendentes = cursor.fetchall()
-    
-    cursor.execute('SELECT id, nome_completo FROM clientes WHERE ativo = TRUE ORDER BY nome_completo')
-    clientes = cursor.fetchall()
-    
-    cursor.execute('SELECT id, nome, preco FROM produtos WHERE ativo = TRUE AND quantidade > 0 ORDER BY nome')
-    produtos = cursor.fetchall()
-    
-    cursor.close()
-    
-    return render_template('fiado/lista.html',
-                         fiados_pendentes=fiados_pendentes,
-                         clientes=clientes,
-                         produtos=produtos,
-                         now=datetime.now())
-
 @app.route('/fiado/quitar/<int:id>')
 @login_required
 def quitar_fiado(id):
     cursor = mysql.connection.cursor(dictionary=True)
     
     try:
+        # Verifica se o fiado existe e está pendente
         cursor.execute('SELECT * FROM fiado WHERE id = %s AND status = "pendente"', (id,))
         fiado = cursor.fetchone()
         
@@ -422,6 +490,7 @@ def quitar_fiado(id):
             flash('Registro de fiado não encontrado ou já quitado', 'danger')
             return redirect(url_for('gerenciar_fiado'))
         
+        # Atualiza o status para pago
         cursor.execute('''
             UPDATE fiado 
             SET status = 'pago', data_pagamento = %s 
@@ -429,14 +498,16 @@ def quitar_fiado(id):
         ''', (datetime.now().date(), id))
         
         mysql.connection.commit()
-        
+        flash('Fiado quitado com sucesso!', 'success')
         
     except Exception as e:
+        mysql.connection.rollback()
         flash(f'Erro ao quitar fiado: {str(e)}', 'danger')
     finally:
         cursor.close()
     
     return redirect(url_for('gerenciar_fiado'))
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

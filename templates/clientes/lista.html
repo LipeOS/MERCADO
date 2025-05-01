@@ -1,33 +1,39 @@
 {% extends "base.html" %}
 
-{% block title %}Clientes - Mercadinho{% endblock %}
-
-{% block extra_js %}
-<script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
-{% endblock %}
+{% block title %}Clientes{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Clientes Cadastrados</h2>
+<div class="page-header">
+    <div class="header-title">
+        <h2><i class="fas fa-users"></i> Clientes</h2>
+    </div>
+    <div class="header-actions">
         <a href="{{ url_for('gerenciar_cliente') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Novo Cliente
+            <i class="fas fa-plus"></i> Novo Cliente
         </a>
     </div>
+</div>
 
-    <div class="card">
-        <div class="card-header">
-            <form method="GET" class="form-inline">
-                <input type="text" name="busca" class="form-control" placeholder="Pesquisar cliente..." value="{{ busca }}">
-                <button type="submit" class="btn btn-primary ml-2">
-                    <i class="bi bi-search"></i> Buscar
+<div class="card">
+    <div class="card-header">
+        <div class="header-title">
+            <span><i class="fas fa-list"></i> Lista de Clientes</span>
+        </div>
+        <div class="header-search">
+            <form method="GET" class="search-form">
+                <input type="text" name="busca" class="form-control search-input" 
+                       placeholder="Pesquisar..." value="{{ busca }}">
+                <button type="submit" class="btn btn-primary search-btn">
+                    <i class="fas fa-search"></i>
                 </button>
             </form>
         </div>
-        
-        <div class="card-body">
-            <table class="table table-striped">
-                <thead>
+    </div>
+    
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
                     <tr>
                         <th>Nome</th>
                         <th>Telefone</th>
@@ -39,20 +45,27 @@
                     {% for cliente in clientes %}
                     <tr>
                         <td>{{ cliente.nome_completo }}</td>
-                        <td>{{ cliente.telefone or 'Não informado' }}</td>
-                        <td>{{ cliente.cpf or 'Não informado' }}</td>
-                        <td>
-                            <a href="{{ url_for('gerenciar_cliente', id=cliente.id) }}" class="btn btn-sm btn-warning">
-                                <i class="bi bi-pencil"></i> Editar
-                            </a>
-                            <button onclick="confirmarExclusao({{ cliente.id }})" class="btn btn-sm btn-danger">
-                                <i class="bi bi-trash"></i> Excluir
-                            </button>
+                        <td>{{ cliente.telefone or '--' }}</td>
+                        <td>{{ cliente.cpf or '--' }}</td>
+                        <td class="actions">
+                            <div class="btn-group">
+                                <a href="{{ url_for('gerenciar_cliente', id=cliente.id) }}" 
+                                   class="btn btn-sm btn-primary" 
+                                   title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button class="btn btn-sm btn-danger delete-btn" 
+                                        data-id="{{ cliente.id }}"
+                                        data-nome="{{ cliente.nome_completo }}"
+                                        title="Excluir">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="4" class="text-center">Nenhum cliente cadastrado</td>
+                        <td colspan="4" class="text-center">Nenhum cliente encontrado</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -61,11 +74,22 @@
     </div>
 </div>
 
+{% block extra_js %}
 <script>
-function confirmarExclusao(id) {
-    if (confirm('Tem certeza que deseja excluir este cliente?')) {
-        window.location.href = "{{ url_for('excluir_cliente', id=0) }}".replace('0', id);
-    }
-}
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+    
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const clienteId = this.getAttribute('data-id');
+            const clienteNome = this.getAttribute('data-nome');
+            
+            if (confirm(`Tem certeza que deseja excluir o cliente "${clienteNome}"?`)) {
+                window.location.href = `/clientes/excluir/${clienteId}`;
+            }
+        });
+    });
+});
 </script>
+{% endblock %}
 {% endblock %}
