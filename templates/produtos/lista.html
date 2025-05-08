@@ -43,39 +43,49 @@
                         <th>Ações</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {% for produto in produtos %}
-                    <tr class="{{ 'table-warning' if produto.quantidade < produto.quantidade_minima else '' }}">
-                        <td>{{ produto.id }}</td>
-                        <td>{{ produto.nome }}</td>
-                        <td>R$ {{ "%.2f"|format(produto.preco) }}</td>
-                        <td>
-                            <span class="badge {{ 'bg-danger' if produto.quantidade < produto.quantidade_minima else 'bg-success' }}">
-                                {{ produto.quantidade }}
-                            </span>
-                        </td>
-                        <td>{{ produto.categoria or '--' }}</td>
-                        <td class="actions">
-                            <div class="btn-group">
-                                <a href="{{ url_for('editar_produto', id=produto.id) }}" 
-                                   class="btn btn-sm btn-primary" 
-                                   title="Editar">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form action="{{ url_for('excluir_produto', id=produto.id) }}" method="POST" style="display: inline;">
-                                    <button type="submit" class="btn btn-sm btn-danger delete-btn" >
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="6" class="text-center">Nenhum produto encontrado</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
+               <tbody>
+    {% for produto in produtos %}
+    <tr class="{{ 'table-warning' if produto.quantidade < produto.quantidade_minima else '' }}">
+        <td>{{ produto.id }}</td>
+        <td>{{ produto.nome }}</td>
+        <td>R$ {{ "%.2f"|format(produto.preco) }}</td>
+        <td>
+            <span class="badge {{ 'bg-danger' if produto.quantidade < produto.quantidade_minima else 'bg-success' }}">
+                {{ produto.quantidade }}
+                {% if produto.quantidade < produto.quantidade_minima %}
+                    <small>/ {{ produto.quantidade_minima }}</small>
+                {% endif %}
+            </span>
+        </td>
+        <td>{{ produto.categoria or '--' }}</td>
+        <td class="actions">
+            <div class="d-flex justify-content-end align-items-center">
+                <div class="btn-group me-2">
+                    <a href="{{ url_for('editar_produto', id=produto.id) }}" 
+                       class="btn btn-sm btn-primary" 
+                       title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form action="{{ url_for('excluir_produto', id=produto.id) }}" method="POST" style="display: inline;">
+                        <button type="submit" class="btn btn-sm btn-danger delete-btn">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </div>
+                {% if produto.quantidade < produto.quantidade_minima %}
+                    <span class="badge bg-danger badge-alert" title="Estoque abaixo do mínimo!">
+                        <i class="fas fa-exclamation-triangle text-white"></i>
+                    </span>
+                {% endif %}
+            </div>
+        </td>
+    </tr>
+    {% else %}
+    <tr>
+        <td colspan="6" class="text-center">Nenhum produto encontrado</td>
+    </tr>
+    {% endfor %}
+</tbody>
             </table>
         </div>
     </div>
@@ -118,6 +128,18 @@
             });
         });
     });
-    </script>
+</script>
+<style>
+   .badge-alert {
+    color: #dc3545 !important;
+    animation: pulse 1.5s infinite;
+    cursor: help;
+}
+    .btn-group {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+</style>
 {% endblock %}
 {% endblock %}

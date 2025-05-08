@@ -181,7 +181,6 @@ def editar_produto(id):
             ''', dados)
             mysql.connection.commit()
             
-            flash('Produto atualizado com sucesso!', 'success')
             return redirect(url_for('produtos'))  # Alterado para 'produtos'
             
         except Exception as e:
@@ -208,7 +207,6 @@ def excluir_produto(id):
         # Alterado de UPDATE para DELETE
         cursor.execute('DELETE FROM produtos WHERE id = %s', (id,))
         mysql.connection.commit()
-        flash('Produto excluído permanentemente com sucesso!', 'success')
     except Exception as e:
         mysql.connection.rollback()
         flash(f'Erro ao excluir produto: {str(e)}', 'danger')
@@ -290,7 +288,6 @@ def gerenciar_cliente(id=None):
                     SET nome_completo = %s, telefone = %s, cpf = %s 
                     WHERE id = %s
                 ''', (nome_completo, telefone_limpo, cpf, id))  # Removido "or None" pois CPF é obrigatório
-                flash('Cliente atualizado com sucesso!', 'success')
             else:
                 cursor.execute('''
                     INSERT INTO clientes (nome_completo, telefone, cpf)
@@ -435,7 +432,6 @@ def gerenciar_fiado():
                     ''', (item['quantidade'], item['produto_id']))
                 
                 mysql.connection.commit()
-                flash('Fiado registrado com sucesso!', 'success')
                 return redirect(url_for('gerenciar_fiado'))
 
             except ValueError as e:
@@ -515,7 +511,6 @@ def quitar_fiado(id):
         ''', (datetime.now().date(), id))
         
         mysql.connection.commit()
-        flash('Fiado quitado com sucesso!', 'success')
         
     except Exception as e:
         mysql.connection.rollback()

@@ -23,7 +23,7 @@ Este é um projeto básico utilizando Flask com integração ao MySQL para geren
 CREATE DATABASE IF NOT EXISTS mercadinho;
 USE mercadinho;
 
--- Tabela de produtos (mantida igual)
+-- Tabela de produtos
 CREATE TABLE produtos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
@@ -38,7 +38,7 @@ CREATE TABLE produtos (
     ativo BOOLEAN DEFAULT TRUE
 );
 
--- Tabela de clientes (mantida igual)
+-- Tabela de clientes
 CREATE TABLE clientes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome_completo VARCHAR(150) NOT NULL,
@@ -50,7 +50,7 @@ CREATE TABLE clientes (
     ativo BOOLEAN DEFAULT TRUE
 );
 
--- Nova estrutura para tabela fiado (modificada)
+-- Tabela fiado
 CREATE TABLE fiado (
     id INT AUTO_INCREMENT PRIMARY KEY,
     cliente_id INT NOT NULL,
@@ -64,7 +64,7 @@ CREATE TABLE fiado (
     INDEX idx_data_compra (data_compra)
 );
 
--- Nova tabela para itens do fiado
+-- Tabela para itens do fiado (COM A CORREÇÃO)
 CREATE TABLE fiado_itens (
     id INT AUTO_INCREMENT PRIMARY KEY,
     fiado_id INT NOT NULL,
@@ -73,13 +73,12 @@ CREATE TABLE fiado_itens (
     valor_unitario DECIMAL(10,2) NOT NULL,
     valor_total DECIMAL(10,2) NOT NULL,
     FOREIGN KEY (fiado_id) REFERENCES fiado(id) ON DELETE CASCADE,
-    FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE RESTRICT,
+    FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE,  -- Alterado para CASCADE
     INDEX idx_fiado (fiado_id),
     INDEX idx_produto (produto_id)
 );
 
-
--- Tabela de usuários (mantida igual)
+-- Tabela de usuários
 CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,

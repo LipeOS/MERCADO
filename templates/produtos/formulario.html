@@ -126,13 +126,7 @@
                                   placeholder="Informações sobre o produto...">{% if produto %}{{ produto.descricao }}{% endif %}</textarea>
                     </div>
 
-                    {% if produto %}
-                    <div class="form-check">
-                        <input type="checkbox" name="ativo" class="form-check-input" id="ativo" 
-                               {% if produto.ativo %}checked{% endif %}>
-                        <label class="form-check-label" for="ativo">Produto ativo</label>
-                    </div>
-                    {% endif %}
+                  
                 </div>
 
                 <div class="form-actions">

@@ -4,8 +4,42 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/fiado.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const quitarButtons = document.querySelectorAll('.quitar-btn');
+    
+    quitarButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const fiadoId = button.getAttribute('data-id');
+            const clienteNome = button.getAttribute('data-cliente');
+            const valorTotal = button.getAttribute('data-valor');
+            const quitarUrl = button.getAttribute('data-url');
+            
+            Swal.fire({
+                title: 'Confirmar Quitação?',
+                html: `Deseja marcar o fiado de <b>${clienteNome}</b> no valor de <b>R$ ${valorTotal}</b> como quitado?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: '<i class="bi bi-check-circle"></i> Quitar',
+                cancelButtonText: '<i class="bi bi-x-circle"></i> Cancelar',
+                reverseButtons: true,
+                focusCancel: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = quitarUrl; // Redireciona para a rota correta
+                }
+            });
+        });
+    });
+});
+</script>
 {% endblock %}
-
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 {% block content %}
 <div class="container">
     <h2 class="mb-4">Gerenciar Fiado</h2>
@@ -127,27 +161,29 @@
                             <th>Ações</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {% for fiado in fiados_pendentes %}
-                        <tr>
-                            <td>{{ fiado.cliente }}</td>
-                            <td>
-                                {% for item in fiado.itens %}
-                                    {{ item.quantidade }}x {{ item.produto }} (R$ {{ "%.2f"|format(item.valor_unitario) }})<br>
-                                {% endfor %}
-                            </td>
-                            <td>R$ {{ "%.2f"|format(fiado.valor_total) }}</td>
-                            <td>{{ fiado.observacoes or '-' }}</td>
-                            <td>
-                                <a href="{{ url_for('quitar_fiado', id=fiado.id) }}" 
-                                   class="btn btn-sm btn-success"
-                                   onclick="return confirm('Confirmar quitação deste fiado?')">
-                                    <i class="bi bi-cash"></i> Quitar
-                                </a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
+                   <tbody>
+    {% for fiado in fiados_pendentes %}
+    <tr>
+        <td>{{ fiado.cliente }}</td>
+        <td>
+            {% for item in fiado.itens %}
+                {{ item.quantidade }}x {{ item.produto }} (R$ {{ "%.2f"|format(item.valor_unitario) }})<br>
+            {% endfor %}
+        </td>
+        <td>R$ {{ "%.2f"|format(fiado.valor_total) }}</td>
+        <td>{{ fiado.observacoes or '-' }}</td>
+<td>
+    <a href="#" 
+       class="btn btn-sm btn-success quitar-btn"
+       data-id="{{ fiado.id }}"
+       data-cliente="{{ fiado.cliente }}"
+       data-valor="{{ '%.2f'|format(fiado.valor_total) }}"
+       data-url="{{ url_for('quitar_fiado', id=fiado.id) }}">
+<i class="fas fa-coins"></i> Quitar    </a>
+</td>
+    </tr>
+    {% endfor %}
+</tbody>
                 </table>
             </div>
             {% else %}
