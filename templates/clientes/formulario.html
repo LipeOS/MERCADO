@@ -4,6 +4,8 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+<!-- Adicionando SweetAlert para alertas bonitos -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 {% endblock %}
 
 {% block content %}
@@ -17,28 +19,29 @@
                 <div class="form-group">
                     <label for="nome_completo">Nome Completo *</label>
                     <input type="text" class="form-control" id="nome_completo" name="nome_completo" 
-                           value="{{ cliente.nome_completo if cliente }}" required>
+                           value="{{ cliente.nome_completo if cliente }}" required
+                           minlength="3" maxlength="100">
                 </div>
 
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="telefone">Telefone *</label>
-                            <input type="text" class="form-control" id="telefone" name="telefone" 
+                            <input type="tel" class="form-control" id="telefone" name="telefone" 
                                    value="{{ cliente.telefone if cliente }}" 
-                                   pattern="\(?\d{2}\)?[\s-]?\d{4,5}[\s-]?\d{4}" 
-                                   title="Digite um telefone válido (ex: (99) 99999-9999)" required>
-                            <small class="form-text text-muted">Formato: (99) 99999-9999</small>
+                                   pattern="[0-9]{10,11}" 
+                                   title="Digite apenas números (10 ou 11 dígitos)" required>
+                            <small class="form-text text-muted">Digite apenas números (10 ou 11 dígitos)</small>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="cpf">CPF</label>
+                            <label for="cpf">CPF *</label>
                             <input type="text" class="form-control" id="cpf" name="cpf" 
                                    value="{{ cliente.cpf if cliente }}"
-                                
-                                   title="Digite um CPF válido (ex: 999.999.999-99)">
-                            <small class="form-text text-muted">Formato: 999.999.999-99</small>
+                                   pattern="[0-9]{11}"
+                                   title="Digite apenas números (11 dígitos)" required>
+                            <small class="form-text text-muted">Digite apenas números (11 dígitos)</small>
                         </div>
                     </div>
                 </div>
@@ -60,4 +63,23 @@
         </div>
     </div>
 </div>
+
+<script>
+function confirmarExclusao(id) {
+    Swal.fire({
+        title: 'Tem certeza?',
+        text: "Você está prestes a excluir este cliente permanentemente!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, excluir!',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = `/clientes/excluir/${id}`;
+        }
+    })
+}
+</script>
 {% endblock %}

@@ -62,12 +62,11 @@
                                    title="Editar">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <button class="btn btn-sm btn-danger delete-btn" 
-                                        data-id="{{ produto.id }}"
-                                        data-nome="{{ produto.nome }}"
-                                        title="Excluir">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
+                                <form action="{{ url_for('excluir_produto', id=produto.id) }}" method="POST" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-danger delete-btn" >
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>
@@ -83,21 +82,42 @@
 </div>
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const deleteButtons = document.querySelectorAll('.delete-btn');
-    
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const produtoId = this.getAttribute('data-id');
-            const produtoNome = this.getAttribute('data-nome');
+    // Confirmação de exclusão com SweetAlert (opcional)
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const form = this.closest('form');
+            const productName = this.getAttribute('data-nome') || 'este produto';
             
-            if (confirm(`Tem certeza que deseja excluir o produto "${produtoNome}"?`)) {
-                window.location.href = `/produtos/excluir/${produtoId}`;
-            }
+            Swal.fire({
+                title: 'Tem certeza?',
+                text: `Você está prestes a excluir ${productName}. Esta ação não pode ser desfeita!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sim, excluir!',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
         });
     });
-});
-</script>
+    
+    // Desabilitar botão após clique para evitar duplo clique
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function() {
+            const submitButtons = this.querySelectorAll('button[type="submit"]');
+            submitButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Excluindo...';
+            });
+        });
+    });
+    </script>
 {% endblock %}
 {% endblock %}

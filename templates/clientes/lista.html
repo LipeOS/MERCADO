@@ -2,6 +2,10 @@
 
 {% block title %}Clientes{% endblock %}
 
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
     <div class="header-title">
@@ -74,7 +78,6 @@
     </div>
 </div>
 
-{% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const deleteButtons = document.querySelectorAll('.delete-btn');
@@ -84,12 +87,23 @@ document.addEventListener('DOMContentLoaded', function() {
             const clienteId = this.getAttribute('data-id');
             const clienteNome = this.getAttribute('data-nome');
             
-            if (confirm(`Tem certeza que deseja excluir o cliente "${clienteNome}"?`)) {
-                window.location.href = `/clientes/excluir/${clienteId}`;
-            }
+            Swal.fire({
+                title: 'Tem certeza?',
+                html: `Você está prestes a excluir o cliente <b>${clienteNome}</b> permanentemente!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sim, excluir!',
+                cancelButtonText: 'Cancelar',
+                focusCancel: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `/clientes/excluir/${clienteId}`;
+                }
+            });
         });
     });
 });
 </script>
-{% endblock %}
 {% endblock %}

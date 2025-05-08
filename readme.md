@@ -78,6 +78,7 @@ CREATE TABLE fiado_itens (
     INDEX idx_produto (produto_id)
 );
 
+
 -- Tabela de usuários (mantida igual)
 CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,

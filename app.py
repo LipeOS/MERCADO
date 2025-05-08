@@ -48,7 +48,6 @@ def login():
 @app.route('/logout')
 def logout():
     session.clear()
-    flash('Você foi deslogado com sucesso', 'info')
     return redirect(url_for('login'))
 
 @app.route('/')
@@ -125,12 +124,18 @@ def cadastrar_produto():
             ''', dados)
             mysql.connection.commit()
             
-            flash('Produto cadastrado com sucesso!', 'success')
-            return redirect(url_for('listar_produtos'))
+            # Verifique o nome correto da sua rota de listagem
+            return redirect(url_for('produtos'))  # Altere para o nome correto da sua rota
             
         except Exception as e:
             flash(f'Erro ao cadastrar produto: {str(e)}', 'danger')
+            # Em caso de erro, não redirecione, apenas renderize o template novamente
+            return render_template('produtos/formulario.html', 
+                                 categorias=categorias,
+                                 produto=None,
+                                 now=datetime.now())
     
+    # Mova esta parte para fora do bloco POST para evitar repetição de código
     cursor = mysql.connection.cursor(dictionary=True)
     cursor.execute('SELECT DISTINCT categoria FROM produtos ORDER BY categoria')
     categorias = [cat['categoria'] for cat in cursor.fetchall()]
@@ -177,7 +182,7 @@ def editar_produto(id):
             mysql.connection.commit()
             
             flash('Produto atualizado com sucesso!', 'success')
-            return redirect(url_for('listar_produtos'))
+            return redirect(url_for('produtos'))  # Alterado para 'produtos'
             
         except Exception as e:
             flash(f'Erro ao atualizar produto: {str(e)}', 'danger')
@@ -188,27 +193,29 @@ def editar_produto(id):
     
     if not produto:
         flash('Produto não encontrado', 'danger')
-        return redirect(url_for('listar_produtos'))
+        return redirect(url_for('produtos'))  # Alterado para 'produtos'
     
     return render_template('produtos/formulario.html', 
                          categorias=categorias,
                          produto=produto,
                          now=datetime.now())
 
-@app.route('/produtos/excluir/<int:id>')
+@app.route('/produtos/excluir/<int:id>', methods=['POST'])
 @login_required
 def excluir_produto(id):
     cursor = mysql.connection.cursor()
     try:
-        cursor.execute('UPDATE produtos SET ativo = FALSE WHERE id = %s', (id,))
+        # Alterado de UPDATE para DELETE
+        cursor.execute('DELETE FROM produtos WHERE id = %s', (id,))
         mysql.connection.commit()
-        flash('Produto excluído com sucesso!', 'success')
+        flash('Produto excluído permanentemente com sucesso!', 'success')
     except Exception as e:
+        mysql.connection.rollback()
         flash(f'Erro ao excluir produto: {str(e)}', 'danger')
     finally:
         cursor.close()
     
-    return redirect(url_for('listar_produtos'))
+    return redirect(url_for('produtos'))  # Certifique-se que 'produtos' é o nome correto da sua rota de listagem
 
 @app.route('/clientes')
 @login_required
@@ -241,20 +248,30 @@ def gerenciar_cliente(id=None):
     if request.method == 'POST':
         nome_completo = request.form['nome_completo']
         telefone = request.form['telefone']
-        cpf = request.form.get('cpf', '')
+        cpf = request.form['cpf']  # Agora é obrigatório, removido o .get() com valor default
         
         # Validações
         erros = []
+        
+        # Validação do nome (obrigatório)
+        if not nome_completo.strip():
+            erros.append('Nome completo é obrigatório')
+        
+        # Validação do telefone (obrigatório)
         telefone_limpo = ''.join(filter(str.isdigit, telefone))
-        if len(telefone_limpo) < 10:
+        if not telefone_limpo:
+            erros.append('Telefone é obrigatório')
+        elif len(telefone_limpo) < 10:
             erros.append('Telefone deve ter pelo menos 10 dígitos')
         
-        if cpf:
-            cpf_limpo = ''.join(filter(str.isdigit, cpf))
-            if len(cpf_limpo) != 11:
-                erros.append('CPF deve ter 11 dígitos')
-            else:
-                cpf = cpf_limpo
+        # Validação do CPF (obrigatório)
+        cpf_limpo = ''.join(filter(str.isdigit, cpf))
+        if not cpf_limpo:
+            erros.append('CPF é obrigatório')
+        elif len(cpf_limpo) != 11:
+            erros.append('CPF deve ter 11 dígitos')
+        else:
+            cpf = cpf_limpo
         
         if erros:
             for erro in erros:
@@ -272,19 +289,19 @@ def gerenciar_cliente(id=None):
                     UPDATE clientes 
                     SET nome_completo = %s, telefone = %s, cpf = %s 
                     WHERE id = %s
-                ''', (nome_completo, telefone_limpo, cpf or None, id))
+                ''', (nome_completo, telefone_limpo, cpf, id))  # Removido "or None" pois CPF é obrigatório
                 flash('Cliente atualizado com sucesso!', 'success')
             else:
                 cursor.execute('''
                     INSERT INTO clientes (nome_completo, telefone, cpf)
                     VALUES (%s, %s, %s)
-                ''', (nome_completo, telefone_limpo, cpf or None))
-                flash('Cliente cadastrado com sucesso!', 'success')
+                ''', (nome_completo, telefone_limpo, cpf))  # Removido "or None" pois CPF é obrigatório
             
             mysql.connection.commit()
             return redirect(url_for('listar_clientes'))
             
         except Exception as e:
+            mysql.connection.rollback()
             flash(f'Erro ao salvar cliente: {str(e)}', 'danger')
         finally:
             cursor.close()
@@ -310,7 +327,7 @@ def excluir_cliente(id):
     try:
         cursor.execute('UPDATE clientes SET ativo = FALSE WHERE id = %s', (id,))
         mysql.connection.commit()
-        flash('Cliente marcado como inativo!', 'success')
+       
     except Exception as e:
         flash(f'Erro ao excluir cliente: {str(e)}', 'danger')
     finally:

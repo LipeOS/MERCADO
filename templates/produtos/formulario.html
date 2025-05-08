@@ -3,7 +3,7 @@
 {% block title %}{{ 'Editar' if produto else 'Novo' }} Produto - Mercadinho{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/produto_form.css') }}">
+
 {% endblock %}
 
 {% block content %}
@@ -12,7 +12,7 @@
 
     <div class="card shadow">
         <div class="card-body">
-            <form method="POST" enctype="multipart/form-data">
+            <form method="POST" id="produtoForm">
                 <!-- Seção Básica -->
                 <div class="form-section">
                     <h5 class="section-title">Informações Básicas</h5>
@@ -32,7 +32,7 @@
                                        list="categorias-sugeridas"
                                        placeholder="Digite ou selecione uma categoria">
                                 <datalist id="categorias-sugeridas">
-                                    {% for cat in categorias_sugeridas %}
+                                    {% for cat in categorias %}
                                         <option value="{{ cat }}">
                                     {% endfor %}
                                 </datalist>
@@ -62,7 +62,7 @@
                                 <label class="form-label">Preço de Venda (R$)*</label>
                                 <input type="number" step="0.01" name="preco" class="form-control" 
                                        value="{{ "%.2f"|format(produto.preco) if produto else '0.00' }}" required
-                                       min="0.01">
+                                       min="0.01" id="preco-venda">
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -70,13 +70,13 @@
                                 <label class="form-label">Preço de Custo (R$)</label>
                                 <input type="number" step="0.01" name="preco_custo" class="form-control" 
                                        value="{{ "%.2f"|format(produto.preco_custo) if produto else '0.00' }}"
-                                       min="0">
+                                       min="0" id="preco-custo">
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label class="form-label">Margem de Lucro</label>
-                                <input type="text" class="form-control" readonly
+                                <input type="text" class="form-control" id="margem-lucro" readonly
                                        value="{% if produto and produto.preco_custo > 0 %}
                                            {{ (((produto.preco - produto.preco_custo) / produto.preco_custo) * 100)|round(2) }}%
                                        {% else %}0%{% endif %}">
@@ -126,18 +126,20 @@
                                   placeholder="Informações sobre o produto...">{% if produto %}{{ produto.descricao }}{% endif %}</textarea>
                     </div>
 
+                    {% if produto %}
                     <div class="form-check">
                         <input type="checkbox" name="ativo" class="form-check-input" id="ativo" 
-                               {% if not produto or produto.ativo %}checked{% endif %}>
+                               {% if produto.ativo %}checked{% endif %}>
                         <label class="form-check-label" for="ativo">Produto ativo</label>
                     </div>
+                    {% endif %}
                 </div>
 
                 <div class="form-actions">
                     <a href="{{ url_for('produtos') }}" class="btn btn-secondary">
                         <i class="bi bi-arrow-left"></i> Voltar
                     </a>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary" id="submit-btn">
                         <i class="bi bi-save"></i> {{ 'Atualizar' if produto else 'Cadastrar' }} Produto
                     </button>
                 </div>
@@ -150,18 +152,45 @@
 {% block extra_js %}
 <script>
     // Calcula margem de lucro automaticamente
-    document.querySelector('input[name="preco_custo"]').addEventListener('input', calcularMargem);
-    document.querySelector('input[name="preco"]').addEventListener('input', calcularMargem);
+    document.addEventListener('DOMContentLoaded', function() {
+        const precoCustoInput = document.getElementById('preco-custo');
+        const precoVendaInput = document.getElementById('preco-venda');
+        
+        if (precoCustoInput && precoVendaInput) {
+            precoCustoInput.addEventListener('input', calcularMargem);
+            precoVendaInput.addEventListener('input', calcularMargem);
+            
+            // Calcular margem inicial
+            calcularMargem();
+        }
+
+        // Prevenir envio duplo do formulário
+        const form = document.getElementById('produtoForm');
+        if (form) {
+            form.addEventListener('submit', function() {
+                const submitBtn = document.getElementById('submit-btn');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = `
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        Processando...
+                    `;
+                }
+            });
+        }
+    });
     
     function calcularMargem() {
-        const precoCusto = parseFloat(document.querySelector('input[name="preco_custo"]').value) || 0;
-        const precoVenda = parseFloat(document.querySelector('input[name="preco"]').value) || 0;
+        const precoCusto = parseFloat(document.getElementById('preco-custo').value) || 0;
+        const precoVenda = parseFloat(document.getElementById('preco-venda').value) || 0;
+        
+        const margemInput = document.getElementById('margem-lucro');
         
         if (precoCusto > 0 && precoVenda > 0) {
             const margem = ((precoVenda - precoCusto) / precoCusto) * 100;
-            document.querySelector('input[readonly]').value = margem.toFixed(2) + '%';
+            margemInput.value = margem.toFixed(2) + '%';
         } else {
-            document.querySelector('input[readonly]').value = '0%';
+            margemInput.value = '0%';
         }
     }
 </script>
